@@ -19,6 +19,16 @@
 <div class="title-container">
     <h1>Search AudiobookBay</h1>
 </div>
+{% if dashboard_message_enabled and dashboard_message_paragraphs and not books %}
+<div class="dashboard-message">
+    <span class="dashboard-message-label">How it works</span>
+    <div class="dashboard-message-body">
+        {% for p in dashboard_message_paragraphs %}
+        <p>{{ p }}</p>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 <div class="search-container" id="search-container">
 <form method="post" class="search-form" onsubmit="showLoadingSpinner()">
     <input type="text" name="query" placeholder="Enter book name" class="search-bar" value="{{ query }}" required>

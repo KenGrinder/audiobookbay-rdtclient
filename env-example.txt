@@ -12,3 +12,8 @@ FLASK_PORT=5078
 DOWNLOAD_CLIENT=rdtclient
 ##  needed to fix issue where ssl cert expired on abb
 ABB_VERIFY_SSL=false
+
+## Optional: how-to message on search page (set to false to hide)
+DASHBOARD_MESSAGE_ENABLED=true
+## Use \n between lines for multiple paragraphs. One line per step works well.
+DASHBOARD_MESSAGE=1. Search for a book below.\n2. Click Download to Server to add it to the queue.\n3. When finished, it appears in Audiobookshelf.\n4. Use the Status tab to check progress.

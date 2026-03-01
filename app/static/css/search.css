@@ -1,3 +1,41 @@
+.dashboard-message {
+    max-width: 52ch;
+    margin: 0 auto 28px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: saturate(140%) blur(16px);
+    -webkit-backdrop-filter: saturate(140%) blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 3px solid rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.dashboard-message-label {
+    display: block;
+    padding: 12px 20px 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.dashboard-message-body {
+    padding: 0 20px 18px;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.dashboard-message-body p {
+    margin: 0 0 0.5em;
+}
+
+.dashboard-message-body p:last-child {
+    margin-bottom: 0;
+}
+
 form {
     margin: 20px 0;
     display: flex;
@@ -224,6 +262,15 @@ img.cover {
     color: rgba(255, 255, 255, 0.95);
     font-size: 0.9rem;
     font-family: inherit;
+}
+
+#filter-container select {
+    accent-color: rgba(255, 255, 255, 0.4);
+}
+
+#filter-container select option {
+    background: #1c1c1e;
+    color: rgba(255, 255, 255, 0.95);
 }
 
 #filter-container select:focus,

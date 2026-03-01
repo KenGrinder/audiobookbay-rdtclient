@@ -17,17 +17,75 @@
             <th>Progress</th>
             <th>State</th>
             <th>Size</th>
+            {% if download_client == 'rdtclient' %}
+            <th>Actions</th>
+            {% endif %}
         </tr>
     </thead>
     <tbody>
         {% for torrent in torrents %}
-        <tr>
+        <tr data-hash="{{ torrent.hash or '' }}">
             <td>{{ torrent.name }}</td>
             <td>{{ torrent.progress }}%</td>
             <td>{{ torrent.state }}</td>
             <td>{{ torrent.size }}</td>
+            {% if download_client == 'rdtclient' %}
+            <td>
+                {% if torrent.hash and torrent.state == 'Finished' %}
+                <button type="button" class="status-remove-btn" data-hash="{{ torrent.hash }}">Remove from list</button>
+                {% elif torrent.hash and torrent.state != 'Finished' %}
+                {% if torrent.raw_state == 'pausedDL' %}
+                <button type="button" class="status-resume-btn" data-hash="{{ torrent.hash }}">Resume</button>
+                {% else %}
+                <button type="button" class="status-pause-btn" data-hash="{{ torrent.hash }}">Pause</button>
+                {% endif %}
+                {% endif %}
+            </td>
+            {% endif %}
         </tr>
         {% endfor %}
     </tbody>
 </table>
+{% endblock %}
+
+{% block extra_js %}
+{% if download_client == 'rdtclient' %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function postAction(btn, url, doingText, doneText) {
+        var hash = btn.getAttribute('data-hash');
+        if (!hash) return;
+        btn.disabled = true;
+        btn.textContent = doingText;
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ hash: hash })
+        })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+        .then(function(o) {
+            if (o.ok) window.location.reload();
+            else alert(o.data.message || 'Request failed');
+        })
+        .catch(function() { alert('Request failed'); })
+        .finally(function() { btn.disabled = false; btn.textContent = doneText; });
+    }
+    document.querySelectorAll('.status-remove-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            postAction(this, '{{ url_for("status_remove") }}', 'Removing…', 'Remove from list');
+        });
+    });
+    document.querySelectorAll('.status-pause-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            postAction(this, '{{ url_for("status_pause") }}', 'Pausing…', 'Pause');
+        });
+    });
+    document.querySelectorAll('.status-resume-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            postAction(this, '{{ url_for("status_resume") }}', 'Resuming…', 'Resume');
+        });
+    });
+});
+</script>
+{% endif %}
 {% endblock %}

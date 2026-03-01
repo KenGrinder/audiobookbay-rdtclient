@@ -45,6 +45,19 @@ NAV_LINK_NAME = os.getenv("NAV_LINK_NAME")
 NAV_LINK_URL = os.getenv("NAV_LINK_URL")
 FLASK_PORT = int(os.getenv("PORT", 5078))
 
+_dashboard_enabled = os.getenv("DASHBOARD_MESSAGE_ENABLED", "true").lower()
+DASHBOARD_MESSAGE_ENABLED = _dashboard_enabled not in ("false", "0", "no")
+_default_msg = (
+    "1. Search for a book below.\n"
+    "2. Click Download to Server to add it to the queue.\n"
+    "3. When finished, it appears in Audiobookshelf.\n"
+    "4. Use the Status tab to check progress."
+)
+_msg_raw = os.getenv("DASHBOARD_MESSAGE", _default_msg)
+DASHBOARD_MESSAGE_PARAGRAPHS = [
+    p.strip() for p in _msg_raw.replace("\\n", "\n").split("\n") if p.strip()
+]
+
 print(f"ABB_HOSTNAME: {ABB_HOSTNAME}")
 print(f"ABB_VERIFY_SSL: {ABB_VERIFY_SSL}")
 if not ABB_VERIFY_SSL:
@@ -129,11 +142,44 @@ def rdtclient_torrents_info(category=None):
     return r.json() if r.content else []
 
 
+def rdtclient_delete_torrent(hashes, delete_files=False):
+    session = requests.Session()
+    rdtclient_login(session)
+    if isinstance(hashes, list):
+        hashes = "|".join(hashes)
+    data = {"hashes": hashes, "deleteFiles": "true" if delete_files else "false"}
+    r = _rdtclient_request("POST", "torrents/delete", session=session, data=data)
+    if r.status_code != 200:
+        r.raise_for_status()
+
+
+def rdtclient_pause_torrent(hashes):
+    session = requests.Session()
+    rdtclient_login(session)
+    if isinstance(hashes, list):
+        hashes = "|".join(hashes)
+    r = _rdtclient_request("POST", "torrents/pause", session=session, data={"hashes": hashes})
+    if r.status_code != 200:
+        r.raise_for_status()
+
+
+def rdtclient_resume_torrent(hashes):
+    session = requests.Session()
+    rdtclient_login(session)
+    if isinstance(hashes, list):
+        hashes = "|".join(hashes)
+    r = _rdtclient_request("POST", "torrents/resume", session=session, data={"hashes": hashes})
+    if r.status_code != 200:
+        r.raise_for_status()
+
+
 @app.context_processor
 def inject_nav_link():
     return {
         "nav_link_name": os.getenv("NAV_LINK_NAME"),
         "nav_link_url": os.getenv("NAV_LINK_URL"),
+        "dashboard_message_enabled": DASHBOARD_MESSAGE_ENABLED,
+        "dashboard_message_paragraphs": DASHBOARD_MESSAGE_PARAGRAPHS,
     }
 
 
@@ -427,6 +473,8 @@ def status():
                     "progress": round(progress, 2),
                     "state": display_state,
                     "size": f"{(t.get("total_size") or 0) / (1024 * 1024):.2f} MB",
+                    "hash": t.get("hash"),
+                    "raw_state": raw_state,
                 })
         elif DOWNLOAD_CLIENT == "delugeweb":
             delugeweb = delugewebclient(url=DL_URL, password=DL_PASSWORD)
@@ -446,9 +494,60 @@ def status():
             ]
         else:
             return jsonify({"message": "Unsupported download client"}), 400
-        return render_template("status.html", torrents=torrent_list)
+        return render_template(
+            "status.html",
+            torrents=torrent_list,
+            download_client=DOWNLOAD_CLIENT or "",
+        )
     except Exception as e:
         return jsonify({"message": f"Failed to fetch torrent status: {e}"}), 500
+
+
+def _status_hash_from_request():
+    data = request.get_json() or {}
+    return data.get("hash") or (data.get("hashes") and data["hashes"][0])
+
+
+@app.route("/status/remove", methods=["POST"])
+def status_remove():
+    if DOWNLOAD_CLIENT != "rdtclient":
+        return jsonify({"message": "Remove is only supported for rdtclient"}), 400
+    hash_val = _status_hash_from_request()
+    if not hash_val:
+        return jsonify({"message": "Missing hash"}), 400
+    try:
+        rdtclient_delete_torrent(hash_val, delete_files=False)
+        return jsonify({"message": "Removed from list"})
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
+@app.route("/status/pause", methods=["POST"])
+def status_pause():
+    if DOWNLOAD_CLIENT != "rdtclient":
+        return jsonify({"message": "Pause is only supported for rdtclient"}), 400
+    hash_val = _status_hash_from_request()
+    if not hash_val:
+        return jsonify({"message": "Missing hash"}), 400
+    try:
+        rdtclient_pause_torrent(hash_val)
+        return jsonify({"message": "Paused"})
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
+@app.route("/status/resume", methods=["POST"])
+def status_resume():
+    if DOWNLOAD_CLIENT != "rdtclient":
+        return jsonify({"message": "Resume is only supported for rdtclient"}), 400
+    hash_val = _status_hash_from_request()
+    if not hash_val:
+        return jsonify({"message": "Missing hash"}), 400
+    try:
+        rdtclient_resume_torrent(hash_val)
+        return jsonify({"message": "Resumed"})
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
 
 
 if __name__ == "__main__":
