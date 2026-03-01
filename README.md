@@ -38,7 +38,7 @@ AudiobookBay Downloader provides a simple and user-friendly interface for users 
 - **Docker** (optional, for containerized deployments)
 
 ### Environment Variables
-The app uses environment variables to configure its behavior. Set these in a `.env` file (local) or in your container environment (Docker).
+The app uses environment variables to configure its behavior. Use a **`.env` file** and/or **environment variables** (e.g. Docker `environment:` or `-e`); either works on its own. If the same variable is set in both, the runtime env value is used.
 
 **Required (pick one client):**
 - `DOWNLOAD_CLIENT` — One of: `qbittorrent`, `transmission`, `delugeweb`, or `rdtclient`.

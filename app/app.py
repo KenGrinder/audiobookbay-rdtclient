@@ -12,6 +12,8 @@ from urllib.parse import urlparse, urljoin
 
 app = Flask(__name__)
 
+# Config from .env file and/or process environment (e.g. Docker). Use either;
+# if both are set for a variable, the process env value is used.
 load_dotenv()
 
 ABB_HOSTNAME = os.getenv("ABB_HOSTNAME", "audiobookbay.lu")
@@ -43,7 +45,8 @@ SAVE_PATH_BASE = os.getenv("SAVE_PATH_BASE")
 RDTCLIENT_API_PREFIX = os.getenv("RDTCLIENT_API_PREFIX", "/api/v2").rstrip("/")
 NAV_LINK_NAME = os.getenv("NAV_LINK_NAME")
 NAV_LINK_URL = os.getenv("NAV_LINK_URL")
-FLASK_PORT = int(os.getenv("PORT", 5078))
+# Support both PORT (common in Docker/Paas) and FLASK_PORT (used in .env example)
+FLASK_PORT = int(os.getenv("PORT") or os.getenv("FLASK_PORT", "5078"))
 
 _dashboard_enabled = os.getenv("DASHBOARD_MESSAGE_ENABLED", "true").lower()
 DASHBOARD_MESSAGE_ENABLED = _dashboard_enabled not in ("false", "0", "no")
