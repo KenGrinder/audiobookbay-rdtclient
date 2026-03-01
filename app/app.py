@@ -475,7 +475,7 @@ def status():
                     "name": t.get("name", "Unknown"),
                     "progress": round(progress, 2),
                     "state": display_state,
-                    "size": f"{(t.get("total_size") or 0) / (1024 * 1024):.2f} MB",
+                    "size": f"{(t.get('total_size') or 0) / (1024 * 1024):.2f} MB",
                     "hash": t.get("hash"),
                     "raw_state": raw_state,
                 })
