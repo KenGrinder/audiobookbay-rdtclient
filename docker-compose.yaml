@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  audiobookbay-automated:
-    image: ghcr.io/jamesry96/audiobookbay-automated:latest
+  audiobookbay-rdtclient:
+    image: ghcr.io/KenGrinder/audiobookbay-rdtclient:latest
     ports:
       - "5078:5078"
-    container_name: audiobookbay-automated
+    container_name: audiobookbay-rdtclient
     environment:
       - DOWNLOAD_CLIENT=${DOWNLOAD_CLIENT}
       - DL_HOST=${DL_HOST}
