@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Initialize filtering if results are present
   if (document.querySelectorAll(".result-row").length > 0) {
     initializeFilters();
     document
@@ -20,7 +19,6 @@ function initializeFilters() {
     initializeDateRangePicker();
 }
 
-// --- Helper Functions ---
 function parseFileSizeToMB(sizeString) {
     if (!sizeString || sizeString.trim().toLowerCase() === 'n/a') return null;
     const parts = sizeString.trim().split(/\s+/);
@@ -45,14 +43,11 @@ function formatFileSize(mb) {
 }
 
 
-// --- Filtering Functions ---
-
 function initializeDateRangePicker() {
     const allDates = Array.from(document.querySelectorAll('.result-row'))
         .map(row => {
             const dateStr = row.dataset.postDate;
             if (!dateStr || dateStr === 'N/A') return null;
-            // Standardize the date format for reliable parsing
             const formattedStr = dateStr.replace(/(\d{1,2})\s(\w{3})\s(\d{4})/, '$2 $1, $3');
             const date = new Date(formattedStr);
             return isNaN(date) ? null : date;
@@ -82,21 +77,17 @@ function initializeFileSizeSlider() {
         .filter(size => size !== null);
 
     if (allSizes.length < 2) {
-        // Not enough data for a range slider, hide it
         document.querySelector('.file-size-filter-wrapper').style.display = 'none';
         return;
     }
 
     const minSize = Math.min(...allSizes);
     const maxSize = Math.max(...allSizes);
-
-    // formatter for the tooltips
     const formatter = {
       to: function(value) {
         return formatFileSize(value);
       },
       from: function(value) {
-        // This is needed for the slider to read its own formatted values
         return Number(parseFileSizeToMB(value));
       }
     };
@@ -168,8 +159,6 @@ function applyFilters() {
     if (language && row.dataset.language !== language) visible = false;
     if (bitrate && row.dataset.bitrate !== bitrate) visible = false;
     if (format && row.dataset.format !== format) visible = false;
-    
-    // File size range filtering
     if (sizeRange) {
         const rowSizeMB = parseFileSizeToMB(row.dataset.fileSize);
         if (rowSizeMB !== null) {
@@ -178,21 +167,16 @@ function applyFilters() {
             }
         }
     }
-
-    // Date range filtering
     if (selectedDates.length === 2) {
         const rowDateStr = row.dataset.postDate;
         if (!rowDateStr || rowDateStr === 'N/A') {
-            visible = false; // Hide items with no date if a date filter is active
+            visible = false;
         } else {
             try {
                 const startDate = selectedDates[0];
                 const endDate = selectedDates[1];
-                // Standardize the date format from the HTML before parsing
                 const formattedStr = rowDateStr.replace(/(\d{1,2})\s(\w{3})\s(\d{4})/, '$2 $1, $3');
                 const rowDate = new Date(formattedStr);
-
-                // Set time to 0 to compare dates only
                 rowDate.setHours(0, 0, 0, 0);
 
                 if (rowDate < startDate || rowDate > endDate) {
@@ -220,8 +204,6 @@ function clearFilters() {
     row.style.display = "";
   });
 }
-
-// --- Search Interaction Functions ---
 
 function showLoadingSpinner() {
   const buttonSpinner = document.getElementById("button-spinner");
@@ -291,15 +273,41 @@ function hideScrollingMessages() {
   if(messageScroller) messageScroller.style.display = "none";
 }
 
-function sendToQB(link, title) {
+function sendToQB(link, title, buttonEl) {
+  const originalText = "Download to Server";
+  const setButtonState = (text, disabled, added) => {
+    if (!buttonEl) return;
+    buttonEl.textContent = text;
+    buttonEl.disabled = !!disabled;
+    buttonEl.classList.toggle("btn-added", !!added);
+  };
+
+  setButtonState("Adding...", true, false);
+
   fetch("/send", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ link: link, title: title }),
   })
-    .then((response) => response.json())
-    .then((data) => {
-      alert(data.message);
-      hideLoadingSpinner();
+    .then((response) => {
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        return response.text().then((t) => {
+          throw new Error(t || "Server error");
+        });
+      }
+      return response.json().then((data) => ({ ok: response.ok, data }));
+    })
+    .then(({ ok, data }) => {
+      if (ok) {
+        setButtonState("Added to Server", true, true);
+      } else {
+        setButtonState(originalText, false, false);
+        alert(data.message || "Failed to add download to server.");
+      }
+    })
+    .catch((err) => {
+      setButtonState(originalText, false, false);
+      alert(err.message || "Failed to add download to server.");
     });
 }

@@ -97,7 +97,7 @@
             </td>
             <td>
                 <button onclick="window.open('{{ book.link }}', '_blank')">Details</button>
-                <button onclick="sendToQB('{{ book.link|escape }}', '{{ book.title|escape }}')">Download to Server</button>
+                <button class="download-to-server-btn" onclick="sendToQB('{{ book.link|escape }}', '{{ book.title|escape }}', this)">Download to Server</button>
             </td>
         </tr>
         {% endfor %}

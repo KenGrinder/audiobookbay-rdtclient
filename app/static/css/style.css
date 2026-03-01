@@ -1,40 +1,54 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #6a1b9a, #8e24aa, #9c27b0);
-    color: white;
+    background: #0d0d0f;
+    color: rgba(255, 255, 255, 0.92);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
-/* TODO - trying to get content to properly show on all screen sizes.
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(60, 60, 80, 0.25), transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
 .content {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin: 0 auto 30px;
-    width: 90%;
+    position: relative;
+    z-index: 1;
+    width: 100%;
     max-width: 1000px;
-    padding: 0 15px;
+    padding: 0 20px 40px;
     box-sizing: border-box;
 }
-*/
+
 h1 {
-    margin-top: 20px;
-    font-size: 2.5rem;
-    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    margin-top: 24px;
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .navbar {
     width: 100%;
-    background-color: rgba(0, 0, 0, 0.3);
+    background: rgba(28, 28, 30, 0.72);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     justify-content: center;
-    padding: 10px 0;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    align-items: center;
+    padding: 12px 20px;
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -42,41 +56,47 @@ h1 {
 
 .navbar a {
     text-decoration: none;
-    color: white;
-    margin: 0 20px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    transition: color 0.3s;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 24px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: color 0.2s ease;
 }
 
 .navbar a:hover {
-    color: #ffcc00;
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .navbar a.active {
-    color: #ffcc00;
-    border-bottom: 2px solid #ffcc00;
+    color: rgba(255, 255, 255, 0.98);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+    padding-bottom: 2px;
 }
+
 .title-container {
-    text-align: center; 
+    text-align: center;
     width: 100%;
     padding: 0 15px;
-    margin: 20px 0; 
+    margin: 20px 0;
 }
 
-h1 {
-    font-size: 2.5rem;
-    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
-    width: 90%; 
+.title-container h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
 }
-
 
 @media (max-width: 500px) {
-h1 {
-    font-size: 2rem;
-}
-
-.navbar a {
-    font-size: 1rem;
-}
+    .title-container h1,
+    h1 {
+        font-size: 1.5rem;
+    }
+    .navbar a {
+        margin: 0 14px;
+        font-size: 0.9rem;
+    }
 }

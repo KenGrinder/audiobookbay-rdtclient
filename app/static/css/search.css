@@ -1,68 +1,68 @@
 form {
     margin: 20px 0;
     display: flex;
-    justify-content: center; /* Center the form content */
+    justify-content: center;
     align-items: center;
-/*
-    gap: 15px
-*/
 }
-/* This overly broad rule was removed */
-/*
-input[type="text"] {
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    width: 300px;
-    font-size: 1rem;
-}
-*/
+
 button {
     padding: 10px 20px;
     width: 100%;
-    background-color: #512da8;
-    border: none;
-    border-radius: 5px;
-    color: white;
-    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 0.9375rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background 0.2s ease, border-color 0.2s ease;
     margin-bottom: 10px;
 }
+
 button:hover {
-    background-color: #673ab7;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.25);
 }
+
+button.download-to-server-btn.btn-added,
+button.download-to-server-btn:disabled.btn-added {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+    cursor: default;
+}
+
+button.download-to-server-btn.btn-added:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
 table {
     width: 90%;
     max-width: 1000px;
     margin: 20px auto 0;
     border-collapse: collapse;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: saturate(140%) blur(16px);
+    -webkit-backdrop-filter: saturate(140%) blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
     overflow: hidden;
 }
+
 td {
     padding: 15px;
     text-align: left;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.9);
 }
+
 img.cover {
-    border-radius: 5px;
+    border-radius: 8px;
     max-width: 100px;
     width: 15vw;
 }
-/*
-#search-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin: 0 30px;
-    width: 90%;
-    max-width: 1000px;
-    padding: 0 15px;
-    box-sizing: border-box;
-}
-*/
+
 .search-form {
     display: flex;
     align-items: center;
@@ -71,44 +71,49 @@ img.cover {
 }
 
 .search-bar {
-    width: 100%; /* Make the search bar full width */
-    padding: 10px; /* Adjust padding as needed */
-    box-sizing: border-box; /* Ensure padding is included in the width */
-    margin-bottom: 10px; /* Add some space between the input and button */
-    /* Properties from the old input[type="text"] rule are now here */
-    border: none;
-    border-radius: 5px;
     width: 300px;
+    padding: 12px 16px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 0.9375rem;
+    font-family: inherit;
+    transition: border-color 0.2s ease, background 0.2s ease;
 }
 
-/*
-.search-bar {
-    width: 90%;
-    padding: 10px; 
-    box-sizing: border-box; 
-    margin-bottom: 10px; 
-    border: none;
-    border-radius: 5px;
-    width: 563px;
-    font-size: 1rem;
-    max-width: 70vw;
+.search-bar::placeholder {
+    color: rgba(255, 255, 255, 0.4);
 }
-*/
+
+.search-bar:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.08);
+}
+
 .search-button {
-    width: auto; /* Set the button width to auto */
-    padding: 10px 20px; /* Add padding to the button */
-    background-color: #512da8;
-    border: none;
-    border-radius: 5px;
-    color: white;
-    font-size: 1rem;
+    width: auto;
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.98);
+    font-size: 0.9375rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-/* Loading spinner styles */
+.search-button:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
+}
+
 .loading-spinner {
-    display: none; /* Hidden by default */
+    display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -118,16 +123,16 @@ img.cover {
 .spinner {
     width: 50px;
     height: 50px;
-    border: 5px solid rgba(255, 255, 255, 0.3);
-    border-top: 5px solid white;
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    border-top-color: rgba(255, 255, 255, 0.8);
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.8s linear infinite;
 }
 
 .loading-spinner p {
     margin-top: 10px;
-    font-size: 1rem;
-    color: white;
+    font-size: 0.9375rem;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .button-spinner {
@@ -139,10 +144,9 @@ img.cover {
 .button-spinner .spinner {
     width: 16px;
     height: 16px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.2);
+    border-top-color: rgba(255, 255, 255, 0.9);
 }
 
 .message-scroller {
@@ -150,35 +154,28 @@ img.cover {
     text-align: center;
     margin: 0 auto;
     width: fit-content;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .error-message {
-    color: red;
+    color: rgba(255, 120, 100, 0.95);
 }
 
-/* Spinner animation */
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
-/* Default styles for small screens (vertical layout) */
 .property-results-container {
     display: flex;
-    flex-direction: column; /* Stack items vertically */
-    font-size: 0.6em;
+    flex-direction: column;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .property-results-container span:not(:last-child)::after {
-    /* Hide the separator by default on small screens */
     content: none;
 }
 
-/* New Filter Styles */
 #filter-container {
     display: flex;
     flex-direction: column;
@@ -186,16 +183,21 @@ img.cover {
     margin: 0 auto 30px;
     width: 90%;
     max-width: 1000px;
-    padding: 0 15px;
+    padding: 16px 20px;
     box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: saturate(140%) blur(16px);
+    -webkit-backdrop-filter: saturate(140%) blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
 }
 
 .filter-row {
     display: flex;
-    justify-content: center; /* Center the content within the row */
+    justify-content: center;
     align-items: center;
     width: 100%;
-    gap: 15px; /* Add gap between controls and buttons */
+    gap: 15px;
 }
 
 .filter-controls {
@@ -210,65 +212,73 @@ img.cover {
 .filter-buttons {
     display: flex;
     gap: 10px;
-    flex-shrink: 0; /* Prevent buttons from shrinking */
+    flex-shrink: 0;
 }
 
-#filter-container select, #filter-container input {
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    color: #333;
+#filter-container select,
+#filter-container input {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+
+#filter-container select:focus,
+#filter-container input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.25);
 }
 
 #filter-container button {
-    padding: 8px 15px;
-    border-radius: 5px;
-    border: none;
-    background-color: #512da8;
-    color: white;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.95);
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background 0.2s ease, border-color 0.2s ease;
     margin-bottom: 0;
 }
 
 #filter-container button:hover {
-    background-color: #673ab7;
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.22);
 }
 
-/* --- File Size Slider Styles --- */
 .file-size-filter-wrapper {
     display: flex;
     align-items: center;
     gap: 10px;
-    width: 563px; /* Give the wrapper a specific width */
-    max-width: 70vw; /* Helps with responsiveness on smaller screens */
+    width: 563px;
+    max-width: 70vw;
 }
 
 #file-size-slider {
-    flex-grow: 1; /* Allow the slider to take up the remaining space */
+    flex-grow: 1;
 }
 
-/* noUiSlider Customization */
 .noUi-target {
-    background: #e0e0e0;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    box-shadow: none;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .noUi-connect {
-    background: #8e24aa;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
 }
 
 .noUi-horizontal {
-    height: 10px;
+    height: 8px;
 }
 
 .noUi-horizontal .noUi-handle {
-    width: 20px;
-    height: 20px;
-    right: -11px;
+    width: 18px;
+    height: 18px;
+    right: -10px;
     top: -6px;
 }
 
@@ -277,52 +287,48 @@ img.cover {
 }
 
 .noUi-handle {
-    border: 1px solid #d9d9d9;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 50%;
-    background: #fff;
-    box-shadow: none;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     outline: none;
 }
 
-.noUi-handle:after, .noUi-handle:before {
-    display: none; /* Hide default pseudo-elements */
+.noUi-handle:after,
+.noUi-handle:before {
+    display: none;
 }
 
 .noUi-tooltip {
-    background: #512da8;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 4px 8px;
-    font-size: 0.8em;
+    background: rgba(40, 40, 45, 0.95);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
 }
 
-
-/* Styles for large screens (horizontal layout) */
 @media (min-width: 905px) {
     .property-results-container {
-        flex-direction: row; /* Arrange items horizontally */
-        justify-content: left; /* Distribute items evenly */
-        align-items: center; /* Vertically align items in the middle */
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
     }
-
     .property-results-container span:not(:last-child)::after {
-        /* Add and style the separator on large screens */
         content: "|";
-        padding: 0 10px; /* Adjust spacing around the separator */
-        color: #ccc; /* A subtle color for the separator */
+        padding: 0 10px;
+        color: rgba(255, 255, 255, 0.35);
     }
 }
 
 p.book-title {
-    font-size: 0.9em;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.95);
 }
 
 @media (max-width: 500px) {
-
-.search-bar {
-    width: 200px;
+    .search-bar {
+        width: 200px;
+    }
 }
-
-}
-

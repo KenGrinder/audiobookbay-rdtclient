@@ -8,14 +8,15 @@ from transmission_rpc import Client as transmissionrpc
 from deluge_web_client import DelugeWebClient as delugewebclient
 from deluge_web_client import TorrentOptions as delugetorrentoptions
 from dotenv import load_dotenv
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 app = Flask(__name__)
 
-# Load environment variables
 load_dotenv()
 
 ABB_HOSTNAME = os.getenv("ABB_HOSTNAME", "audiobookbay.lu")
+_abb_verify = os.getenv("ABB_VERIFY_SSL", "true").lower()
+ABB_VERIFY_SSL = _abb_verify not in ("false", "0", "no")
 
 PAGE_LIMIT = int(os.getenv("PAGE_LIMIT", 5))
 
@@ -31,7 +32,6 @@ else:
     DL_HOST = os.getenv("DL_HOST")
     DL_PORT = os.getenv("DL_PORT")
 
-    # Make a DL_URL for Deluge if one was not specified
     if DL_HOST and DL_PORT:
         DL_URL = f"{DL_SCHEME}://{DL_HOST}:{DL_PORT}"
 
@@ -40,15 +40,15 @@ DL_PASSWORD = os.getenv("DL_PASSWORD")
 DL_CATEGORY = os.getenv("DL_CATEGORY", "Audiobookbay-Audiobooks")
 SAVE_PATH_BASE = os.getenv("SAVE_PATH_BASE")
 
-# Custom Nav Link Variables
+RDTCLIENT_API_PREFIX = os.getenv("RDTCLIENT_API_PREFIX", "/api/v2").rstrip("/")
 NAV_LINK_NAME = os.getenv("NAV_LINK_NAME")
 NAV_LINK_URL = os.getenv("NAV_LINK_URL")
-
-# Define the port to be used
 FLASK_PORT = int(os.getenv("PORT", 5078))
 
-# Print configuration
 print(f"ABB_HOSTNAME: {ABB_HOSTNAME}")
+print(f"ABB_VERIFY_SSL: {ABB_VERIFY_SSL}")
+if not ABB_VERIFY_SSL:
+    print("[NOTE] SSL verification disabled for AudiobookBay (ABB_VERIFY_SSL=false)")
 print(f"DOWNLOAD_CLIENT: {DOWNLOAD_CLIENT}")
 print(f"DL_HOST: {DL_HOST}")
 print(f"DL_PORT: {DL_PORT}")
@@ -60,6 +60,73 @@ print(f"NAV_LINK_NAME: {NAV_LINK_NAME}")
 print(f"NAV_LINK_URL: {NAV_LINK_URL}")
 print(f"PAGE_LIMIT: {PAGE_LIMIT}")
 print(f"PORT: {FLASK_PORT}")
+if DOWNLOAD_CLIENT == "rdtclient":
+    print(f"RDTCLIENT_API_PREFIX: {RDTCLIENT_API_PREFIX}")
+
+
+def _rdtclient_base_url():
+    if not DL_HOST or not DL_PORT:
+        raise ValueError("DL_HOST and DL_PORT (or DL_URL) must be set for rdtclient")
+    return f"{DL_SCHEME}://{DL_HOST}:{DL_PORT}"
+
+
+def _rdtclient_request(method, path, session=None, **kwargs):
+    base = _rdtclient_base_url()
+    url = urljoin(base + "/", f"{RDTCLIENT_API_PREFIX}/{path}")
+    sess = session or requests
+    return sess.request(method, url, timeout=30, **kwargs)
+
+
+def rdtclient_login(session):
+    data = {}
+    if DL_USERNAME:
+        data["username"] = DL_USERNAME
+    if DL_PASSWORD:
+        data["password"] = DL_PASSWORD
+    r = _rdtclient_request("POST", "auth/login", session=session, data=data)
+    if r.status_code != 200:
+        r.raise_for_status()
+    return "Ok." in (r.text or "")
+
+
+def rdtclient_ensure_category(session, category):
+    r = _rdtclient_request(
+        "POST", "torrents/createCategory", session=session, data={"category": category}
+    )
+    if r.status_code not in (200, 409):
+        r.raise_for_status()
+
+
+def rdtclient_add_torrent(magnet_link, save_path=None, category=None):
+    session = requests.Session()
+    rdtclient_login(session)
+    if category:
+        try:
+            rdtclient_ensure_category(session, category)
+        except Exception:
+            pass
+    data = {"urls": magnet_link}
+    if category:
+        data["category"] = category
+    if save_path:
+        data["savepath"] = save_path
+    r = _rdtclient_request("POST", "torrents/add", session=session, data=data)
+    if r.status_code != 200:
+        r.raise_for_status()
+
+
+def rdtclient_torrents_info(category=None):
+    session = requests.Session()
+    rdtclient_login(session)
+    params = {}
+    if category:
+        params["category"] = category
+    r = _rdtclient_request(
+        "GET", "torrents/info", session=session, params=params
+    )
+    if r.status_code != 200:
+        r.raise_for_status()
+    return r.json() if r.content else []
 
 
 @app.context_processor
@@ -71,33 +138,16 @@ def inject_nav_link():
 
 
 def is_url_valid(url):
-    """
-    Checks if URL is valid and returns a 200 status code. Primarily used to check if cover images are accessible.
-
-    Args:
-        url (str): The URL to check.
-    """
     try:
-        # Use a HEAD request with a short timeout and stream parameter
-        response = requests.head(url, timeout=3, allow_redirects=True, stream=True)
+        response = requests.head(
+            url, timeout=3, allow_redirects=True, stream=True, verify=ABB_VERIFY_SSL
+        )
         return response.status_code == 200
     except requests.exceptions.RequestException:
         return False
 
 
-# Helper function to search AudiobookBay
 def search_audiobookbay(query, max_pages=PAGE_LIMIT):
-    """
-    Searches AudiobookBay for a given query and scrapes the results.
-
-    Args:
-        query (str): The search term.
-        max_pages (int): The maximum number of pages to scrape.
-
-    Returns:
-        list: A list of dictionaries, where each dictionary represents a book
-              and contains its details.
-    """
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
     }
@@ -108,8 +158,9 @@ def search_audiobookbay(query, max_pages=PAGE_LIMIT):
     for page in range(1, max_pages + 1):
         url = f"https://{ABB_HOSTNAME}/page/{page}/?s={query.lower().replace(' ', '+')}"
         try:
-            response = requests.get(url, headers=headers, timeout=15)
-            # Raise an exception for bad status codes (4xx or 5xx)
+            response = requests.get(
+                url, headers=headers, timeout=15, verify=ABB_VERIFY_SSL
+            )
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             print(f"[ERROR] Failed to fetch page {page}. Reason: {e}")
@@ -118,7 +169,6 @@ def search_audiobookbay(query, max_pages=PAGE_LIMIT):
         soup = BeautifulSoup(response.text, "html.parser")
         posts = soup.select(".post")
 
-        # If no posts are found on the page, stop paginating
         if not posts:
             print(f"No more results found on page {page}.")
             break
@@ -129,12 +179,11 @@ def search_audiobookbay(query, max_pages=PAGE_LIMIT):
             try:
                 title_element = post.select_one(".postTitle > h2 > a")
                 if not title_element:
-                    continue  # Skip post if title is not found
+                    continue
 
                 title = title_element.text.strip()
                 link = f"https://{ABB_HOSTNAME}{title_element['href']}"
 
-                # Check if the cover URL is valid, otherwise use the default
                 cover_url = (
                     post.select_one("img")["src"] if post.select_one("img") else None
                 )
@@ -204,13 +253,14 @@ def search_audiobookbay(query, max_pages=PAGE_LIMIT):
     return results
 
 
-# Helper function to extract magnet link from details page
 def extract_magnet_link(details_url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
     }
     try:
-        response = requests.get(details_url, headers=headers)
+        response = requests.get(
+            details_url, headers=headers, verify=ABB_VERIFY_SSL
+        )
         if response.status_code != 200:
             print(
                 f"[ERROR] Failed to fetch details page. Status Code: {response.status_code}"
@@ -218,15 +268,11 @@ def extract_magnet_link(details_url):
             return None
 
         soup = BeautifulSoup(response.text, "html.parser")
-
-        # Extract Info Hash
         info_hash_row = soup.find("td", string=re.compile(r"Info Hash", re.IGNORECASE))
         if not info_hash_row:
             print("[ERROR] Info Hash not found on the page.")
             return None
         info_hash = info_hash_row.find_next_sibling("td").text.strip()
-
-        # Extract Trackers
         tracker_rows = soup.find_all(
             "td", string=re.compile(r"udp://|http://", re.IGNORECASE)
         )
@@ -242,8 +288,6 @@ def extract_magnet_link(details_url):
                 "udp://tracker.coppersurfer.tk:6969",
                 "udp://tracker.leechers-paradise.org:6969",
             ]
-
-        # Construct the magnet link
         trackers_query = "&".join(
             f"tr={requests.utils.quote(tracker)}" for tracker in trackers
         )
@@ -257,20 +301,18 @@ def extract_magnet_link(details_url):
         return None
 
 
-# Helper function to sanitize titles
 def sanitize_title(title):
     return re.sub(r'[<>:"/\\|?*]', "", title).strip()
 
 
-# Endpoint for search page
 @app.route("/", methods=["GET", "POST"])
 def search():
     books = []
     query = ""
     try:
-        if request.method == "POST":  # Form submitted
+        if request.method == "POST":
             query = request.form["query"]
-            if query:  # Only search if the query is not empty
+            if query:
                 books = search_audiobookbay(query)
         return render_template("search.html", books=books, query=query)
     except Exception as e:
@@ -280,7 +322,6 @@ def search():
         )
 
 
-# Endpoint to send magnet link to qBittorrent
 @app.route("/send", methods=["POST"])
 def send():
     data = request.json
@@ -302,6 +343,12 @@ def send():
             )
             qb.auth_log_in()
             qb.torrents_add(urls=magnet_link, save_path=save_path, category=DL_CATEGORY)
+        elif DOWNLOAD_CLIENT == "rdtclient":
+            rdtclient_add_torrent(
+                magnet_link,
+                save_path=save_path or None,
+                category=DL_CATEGORY or None,
+            )
         elif DOWNLOAD_CLIENT == "transmission":
             transmission = transmissionrpc(
                 host=DL_HOST,
@@ -326,6 +373,8 @@ def send():
                 "message": "Download added successfully! This may take some time, the download will show in Audiobookshelf when completed."
             }
         )
+    except ValueError as e:
+        return jsonify({"message": str(e)}), 400
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
@@ -363,6 +412,22 @@ def status():
                 }
                 for torrent in torrents
             ]
+        elif DOWNLOAD_CLIENT == "rdtclient":
+            raw = rdtclient_torrents_info(category=DL_CATEGORY or None)
+            torrent_list = []
+            for t in raw:
+                raw_state = t.get("state", "unknown")
+                progress = (t.get("progress", 0) or 0) * 100
+                if raw_state in ("pausedUP", "uploading", "stalledUP", "checkingUP", "forcedUP") or progress >= 100:
+                    display_state = "Finished"
+                else:
+                    display_state = raw_state
+                torrent_list.append({
+                    "name": t.get("name", "Unknown"),
+                    "progress": round(progress, 2),
+                    "state": display_state,
+                    "size": f"{(t.get("total_size") or 0) / (1024 * 1024):.2f} MB",
+                })
         elif DOWNLOAD_CLIENT == "delugeweb":
             delugeweb = delugewebclient(url=DL_URL, password=DL_PASSWORD)
             delugeweb.login()

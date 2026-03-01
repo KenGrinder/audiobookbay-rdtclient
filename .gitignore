@@ -119,8 +119,16 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environments
+# Local env and secrets (never commit)
 .env
+.env.*
+!.env.example
+
+# Local docs / writeups (project-specific notes, not for repo)
+*-writeup.md
+rdt-api-writeup.md
+
+# Environments
 .venv
 env/
 venv/

@@ -1,0 +1,14 @@
+DL_SCHEME=http
+DL_HOST=yourhost
+DL_PORT=6500
+DL_USERNAME=admin
+DL_PASSWORD=password
+DL_CATEGORY=abb-downloader
+SAVE_PATH_BASE=/audiobooks
+ABB_HOSTNAME=audiobookbay.is
+NAV_LINK_NAME=audiobookshelf
+NAV_LINK_URL=https://website.com
+FLASK_PORT=5078
+DOWNLOAD_CLIENT=rdtclient
+##  needed to fix issue where ssl cert expired on abb
+ABB_VERIFY_SSL=false
